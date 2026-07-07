@@ -1,8 +1,9 @@
 const express = require('express')
-const path = require('path')
 const fs = require('fs')
 const { default: makeWASocket, DisconnectReason, useMultiFileAuthState, downloadMediaMessage, Browsers } = require('@whiskeysockets/baileys');
 const { Boom } = require('@hapi/boom');
+const yts = require('yt-search');
+const ytDlp = require('yt-dlp-exec');
 const QRCode = require('qrcode')
 const axios = require('axios');
 const { exec } = require('child_process');
@@ -10,8 +11,7 @@ const { exec } = require('child_process');
 const app = express()
 const PORT = process.env.PORT || 3000
 
-app.use(express.static('public'))
-app.use(express.json())
+app.use(express.json()) // REMOVED static public folder
 
 const BOT_NAME = 'DARK-EYE OFC';
 const OWNER = '263783546271@s.whatsapp.net'; // CHANGE THIS
@@ -37,7 +37,7 @@ let pairing_number = ""
 function box(title, data = {}) {
     let text = `*╭───❰ ${BOT_NAME} ❱───╮*\n*│* ${title}\n`;
     for(let key in data){
-        text += `*│* ◇ *${key.toUpperCase()}:* ${data[key]}\n`;
+        text += `*│* *${key.toUpperCase()}:* ${data[key]}\n`;
     }
     text += `*╰────────────────╯*\n\n> *DARK-EYE OFFICIAL DEV 2K*`;
     return text;
@@ -50,56 +50,56 @@ function getMenu(prefix = '.') {
 *╚══════════════════╝*
 
 *╭───❰ OWNER ❱───╮*
-|♤ ${prefix}mode
-|♤ ${prefix}public 
-|♤ ${prefix}private
-|♤ ${prefix}groups 
-|♤ ${prefix}inbox
+| ${prefix}mode
+| ${prefix}public 
+| ${prefix}private
+| ${prefix}groups 
+| ${prefix}inbox
 *╰────────────╯*
 
 *╭───❰ SYSTEM ❱───╮*
-|♤ ${prefix}alive 
-|♤ ${prefix}ping
-|♤ ${prefix}uptime 
-|♤ ${prefix}update
-|♤ ${prefix}repo 
-|♤ ${prefix}menu
+| ${prefix}alive 
+| ${prefix}ping
+| ${prefix}uptime 
+| ${prefix}update
+| ${prefix}repo 
+| ${prefix}menu
 *╰─────────────╯*
 
 *╭────❰ GROUP ❱────╮*
-|♤ ${prefix}glink
-|♤ ${prefix}tagall
-|♤ ${prefix}groupinfo 
-|♤ ${prefix}listadmin
-|♤ ${prefix}kick
-|♤ ${prefix}close 
-|♤ ${prefix}open
-|♤ ${prefix}setgname 
-|♤ ${prefix}del
-|♤ ${prefix}antilink 
-|♤ ${prefix}antimention
+| ${prefix}glink
+| ${prefix}tagall
+| ${prefix}groupinfo 
+| ${prefix}listadmin
+| ${prefix}kick
+| ${prefix}close 
+| ${prefix}open
+| ${prefix}setgname 
+| ${prefix}del
+| ${prefix}antilink 
+| ${prefix}antimention
 *╰────────────╯*
 
 *╭────❰ DOWNLOAD ❱───╮*
-|♤ ${prefix}song 
-|♤ ${prefix}play
-|♤ ${prefix}video
-|♤ ${prefix}movie
+| ${prefix}song 
+| ${prefix}play
+| ${prefix}video
+| ${prefix}movie
 *╰───────────────╯*
 
 *╭───❰ AI ❱───╮*
-|♤ ${prefix}ai 
-|♤ ${prefix}meta
+| ${prefix}ai 
+| ${prefix}meta
 *╰───────────╯*
 
 *╭───❰ SETTINGS ❱───╮*
-|♤ ${prefix}listsudo 
-|♤ ${prefix}addsudo
-|♤ ${prefix}antidelete
-|♤ ${prefix}autoread
-|♤ ${prefix}autotyping
+| ${prefix}listsudo 
+| ${prefix}addsudo
+| ${prefix}antidelete
+| ${prefix}autoread
+| ${prefix}autotyping
 *╰───────────────╯*
-♤♤♤♡♡♡♧♧♧□□□◇◇◇○○○☆☆☆
+
 > *©𝑝𝑜𝑤𝑒𝑟𝑒𝑑 𝑏𝑦 𝐃𝐀𝐑𝐊 𝐄𝐘𝐄 𝐎𝐅𝐂 𝐃𝐄𝐕*
 > Follow Channel: ${CHANNEL}`
 }
@@ -109,7 +109,7 @@ const start = async () => {
     
     sock = makeWASocket({ 
         auth: state, 
-        printQRInTerminal: false, // We use website QR instead
+        printQRInTerminal: false,
         browser: Browsers.macOS('Chrome')
     });
     
@@ -119,7 +119,7 @@ const start = async () => {
         const { connection, lastDisconnect, qr } = update;
         
         if(qr) {
-            qr_data = await QRCode.toDataURL(qr) // Save QR for website
+            qr_data = await QRCode.toDataURL(qr)
         }
         
         if(connection === 'close') {
@@ -132,7 +132,6 @@ const start = async () => {
             qr_data = ""
         }
         
-        // Auto request pairing code if requested from website
         if(pairing_requested && pairing_number && connection === 'connecting') {
             try {
                 const code = await sock.requestPairingCode(pairing_number);
@@ -142,8 +141,6 @@ const start = async () => {
             pairing_requested = false
         }
     });
-
-    const deletedMsgs = new Map();
 
     sock.ev.on('messages.upsert', async ({ messages }) => {
         const msg = messages[0];
@@ -167,7 +164,7 @@ const start = async () => {
         if(autotyping) await sock.sendPresenceUpdate('composing', jid);
         if(autoread) await sock.readMessages([msg.key]);
 
-        // ===== MENU WITH LOGO + FORWARD =====
+        // ===== MENU =====
         if(command === 'menu' || command === 'help'){
             await sock.sendMessage(jid, { 
                 image: { url: BOT_IMAGE },
@@ -200,13 +197,13 @@ const start = async () => {
             await sock.sendMessage(jid, { text: box('BOT REPOSITORY', {NAME: BOT_NAME, LINK: REPO, OWNER: '@'+OWNER.split('@')[0]}), mentions: [OWNER] });
         }
 
-        // ===== OWNER COMMANDS =====
+        // ===== OWNER =====
         if(command === 'mode' && isOwner){
             mode = args[0] || 'public';
             await sock.sendMessage(jid, { text: box('MODE CHANGED', {MODE: mode}) });
         }
 
-        // ===== GROUP COMMANDS =====
+        // ===== GROUP =====
         if(command === 'tagall' && isGroup){
             let txt = box('TAGALL', {GROUP: metadata.subject, TOTAL: metadata.participants.length}) + '\n\n';
             let mentions = [];
@@ -215,9 +212,16 @@ const start = async () => {
         }
 
         // ===== DOWNLOAD =====
-if(command === 'song' || command === 'play'){
-    await sock.sendMessage(jid, { text: box('DOWNLOAD', {INFO: 'Downloads coming soon. Website is live first'}) });
-}
+        if(command === 'song' || command === 'play'){
+            if(!args[0]) return await sock.sendMessage(jid, { text: box('SONG DOWNLOAD', {ERROR: 'Missing song name', EXAMPLE: '♤song faded'}) });
+            let query = args.join(' ');
+            const search = await yts(query);
+            const video = search.videos[0];
+            await sock.sendMessage(jid, { text: box('DOWNLOADING SONG', {NAME: video.title}) });
+            const file = await ytDlp(video.url, { extractAudio: true, audioFormat: 'mp3', output: 'temp.mp3' });
+            await sock.sendMessage(jid, { audio: fs.readFileSync('temp.mp3'), mimetype: 'audio/mp4', fileName: `${video.title}.mp3` });
+            fs.unlinkSync('temp.mp3');
+        }
 
         // ===== AI =====
         if(command === 'ai' || command === 'meta'){
@@ -229,12 +233,10 @@ if(command === 'song' || command === 'play'){
 start();
 
 // ===== WEBSITE API ROUTES =====
-// API for QR
 app.get('/qr', (req,res) => {
   res.json({ qr: qr_data })
 })
 
-// API for Pair Code
 app.get('/pair', async (req,res) => {
   const number = req.query.number
   pairing_requested = true
@@ -244,30 +246,42 @@ app.get('/pair', async (req,res) => {
   }, 3000)
 })
 
+// FIXED PANEL - NO PUBLIC FOLDER
 app.get('/', (req,res) => {
-  res.sendFile(path.join(__dirname, 'public/index.html'))
-})
-
-app.listen(PORT, () => console.log(`Website running on port ${PORT}`))
-
-//====WEBSITE WITH BUTTONS====
-app.get('/', (req,res) => {
-    res.send(`
+  res.send(`
     <!DOCTYPE html>
     <html>
     <head>
         <title>👁️ DARK-EYE MD</title>
         <style>
-            body { background: #0a0a0a; color: white; font-family: Arial; text-align: center; padding: 50px; }
-            .btn { background: #25D366; color: white; padding: 15px 30px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; text-decoration: none; display: inline-block; margin: 10px; }
+            body { background: #0a0a0a; color: white; font-family: Arial; text-align: center; padding: 30px; }
+            h1 { color: #00ff88; }
+            .btn { background: #00ff88; color: black; padding: 15px 30px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-decoration: none; display: inline-block; margin: 10px; }
+            #qrimg { max-width: 300px; margin: 20px auto; }
         </style>
     </head>
     <body>
-        <h1>👁️ DARK-EYE MD</h1>
-        <p>The most advanced WhatsApp Bot with Website Panel</p>
-        <a href="/pair" class="btn">📱 CONNECT TO WHATSAPP</a>
-        <a href="/qr" class="btn" style="background:#5865F2;">📷 GET QR CODE</a>
+        <h1>DARK-EYE MD</h1>
+        <p>Connect your WhatsApp</p>
+        <button class="btn" onclick="showQR()">QR Code</button>
+        <button class="btn" onclick="showPair()">Pair Code</button>
+        <div id="result"></div>
+        
+        <script>
+            async function showQR(){
+                const r = await fetch('/qr'); const d = await r.json();
+                document.getElementById('result').innerHTML = d.qr ? '<img id="qrimg" src="'+d.qr+'">' : 'Generating QR... Refresh';
+            }
+            async function showPair(){
+                const num = prompt('Enter number with country code: 263783...');
+                if(!num) return;
+                const r = await fetch('/pair?number='+num); const d = await r.json();
+                document.getElementById('result').innerHTML = '<h2>Code: '+d.code+'</h2><p>WhatsApp > Linked Devices</p>';
+            }
+        </script>
     </body>
     </html>
-    `)
+  `)
 })
+
+app.listen(PORT, () => console.log(`Website running on port ${PORT}`))
