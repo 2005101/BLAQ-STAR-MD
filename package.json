@@ -1,14 +1,15 @@
 {
-  "name": "dark-eye-md",
+  "name": "dark-eye-md-web",
   "version": "1.0.0",
-  "description": "DARK-EYE OFC WhatsApp Bot",
-  "main": "index.js",
+  "description": "DARK-EYE-MD WhatsApp Bot with Website",
+  "main": "server.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node server.js"
   },
   "dependencies": {
-    "@hapi/boom": "^10.0.1",
+    "qrcode": "^1.5.3"
     "@whiskeysockets/baileys": "^6.6.0",
+    "express": "^4.18.2",
     "axios": "^1.7.2",
     "pino": "^9.3.2",
     "yt-search": "^2.10.4"
