@@ -37,7 +37,7 @@ function box(title, data = {}) {
 }
 
 // ===== MENU FUNCTION =====
-function getMenu(prefix = '♤') {
+function getMenu(prefix = '.') {
     return `*╔═══❰ DARK-EYE OFC ❱═══╗*
 *║* 👑 *OWNER:* @${OWNER.split('@')[0]}
 *╚══════════════════╝*
