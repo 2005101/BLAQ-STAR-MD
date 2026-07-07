@@ -25,7 +25,7 @@ The most advanced WhatsApp Bot with Website Panel
 6. Open your link and click `Pair Code`
 
 <p align="center">
-  <a href="https://blaq-star-md.onrender.com" target="_blank">
+  <a href="https://blaq-star-md--skyper-md.replit.app" target="_blank">
     <button style="background:#25D366;color:white;padding:15px 30px;border:none;border-radius:8px;font-size:18px;font-weight:bold;cursor:pointer;">
       📱 CONNECT TO WHATSAPP
     </button>
