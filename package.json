@@ -1,0 +1,17 @@
+{
+  "name": "dark-eye-md",
+  "version": "1.0.0",
+  "description": "DARK-EYE OFC WhatsApp Bot",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@hapi/boom": "^10.0.1",
+    "@whiskeysockets/baileys": "^6.6.0",
+    "axios": "^1.7.2",
+    "pino": "^9.3.2",
+    "yt-dlp-exec": "^2.3.2",
+    "yt-search": "^2.10.4"
+  }
+}
