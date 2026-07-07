@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DARK-EYE MD - BLAQ-STAR-MD</title>
+  <style>
+    body { background:#0a0a0a; color:white; font-family:Arial; text-align:center; padding-top:50px; }
+    h1 { color:#00ff88; }
+    button { background:#00ff88; color:black; border:none; padding:15px 30px; margin:10px; font-size:18px; border-radius:10px; cursor:pointer; }
+    button:hover { background:#00cc6a; }
+    #qr, #code { margin-top:20px; font-size:20px; color:#00ff88; }
+  </style>
+</head>
+<body>
+  <h1>DARK-EYE MD</h1>
+  <p>Connect your WhatsApp</p>
+  
+  <button onclick="getQR()">QR Code</button>
+  <button onclick="getPair()">Pair Code</button>
+  
+  <div id="qr"></div>
+  <div id="code"></div>
+
+<script>
+async function getQR() {
+  document.getElementById('qr').innerText = "Generating QR...";
+  let res = await fetch('/qr');
+  let data = await res.json();
+  document.getElementById('qr').innerHTML = `<img src="${data.qr}" />`;
+}
+
+async function getPair() {
+  let num = prompt("Enter your WhatsApp number with country code: 263...");
+  let res = await fetch('/pair?number='+num);
+  let data = await res.json();
+  document.getElementById('code').innerText = "Your Code: " + data.code;
+}
+</script>
+</body>
+</html>
