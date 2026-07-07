@@ -41,7 +41,6 @@ The most advanced WhatsApp Bot with Website Panel
 | .song | Download music - Coming soon |
 
 ### 👑 Owner
-Blaq-Star
-
+DARK-EYE OFC DEV 
 ### ⚠️ Note
 Downloads are disabled on Render. Use API version soon.
