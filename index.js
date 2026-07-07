@@ -217,16 +217,9 @@ const start = async () => {
         }
 
         // ===== DOWNLOAD =====
-        if(command === 'song' || command === 'play'){
-            if(!args[0]) return await sock.sendMessage(jid, { text: box('SONG DOWNLOAD', {ERROR: 'Missing song name', EXAMPLE: '♤song faded'}) });
-            let query = args.join(' ');
-            const search = await yts(query);
-            const video = search.videos[0];
-            await sock.sendMessage(jid, { text: box('DOWNLOADING SONG', {NAME: video.title}) });
-            const file = await ytDlp(video.url, { extractAudio: true, audioFormat: 'mp3', output: 'temp.mp3' });
-            await sock.sendMessage(jid, { audio: fs.readFileSync('temp.mp3'), mimetype: 'audio/mp4', fileName: `${video.title}.mp3` });
-            fs.unlinkSync('temp.mp3');
-        }
+if(command === 'song' || command === 'play'){
+    await sock.sendMessage(jid, { text: box('DOWNLOAD', {INFO: 'Downloads coming soon. Website is live first'}) });
+}
 
         // ===== AI =====
         if(command === 'ai' || command === 'meta'){
