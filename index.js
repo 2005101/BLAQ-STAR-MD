@@ -249,3 +249,81 @@ app.get('/', (req,res) => {
 })
 
 app.listen(PORT, () => console.log(`Website running on port ${PORT}`))
+
+//====WEBSITE WITH BUTTONS====
+app.get('/', (req,res) => {
+    res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>DARK-EYE MD</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { 
+                background: #000; 
+                color: #00ff00; 
+                font-family: 'Courier New', monospace; 
+                text-align: center; 
+                padding: 30px 20px;
+                min-height: 100vh;
+            }
+            h1 { 
+                font-size: 35px; 
+                text-shadow: 0 0 15px #00ff00; 
+                animation: glow 2s ease-in-out infinite;
+                margin-bottom: 10px;
+            }
+            @keyframes glow { 0%,100%{text-shadow:0 0 10px #00ff00} 50%{text-shadow:0 0 25px #00ff00} }
+            .subtitle { color: #00cc00; margin-bottom: 30px; }
+            .btn { 
+                background: #00ff00; 
+                color: #000; 
+                padding: 15px 30px; 
+                margin: 10px; 
+                border: none; 
+                font-size: 16px; 
+                cursor: pointer; 
+                border-radius: 8px; 
+                font-weight: bold; 
+                transition: 0.3s;
+                display: inline-block;
+            }
+            .btn:hover { background: #00cc00; transform: scale(1.05); box-shadow: 0 0 15px #00ff00; }
+            .box { 
+                border: 2px solid #00ff00; 
+                padding: 20px; 
+                margin: 20px auto; 
+                max-width: 450px; 
+                border-radius: 10px; 
+                background: #001100;
+                box-shadow: 0 0 10px #00ff00;
+            }
+            .status { color: #00ff00; font-size: 18px; margin-top: 20px; }
+            .dot { display: inline-block; width: 10px; height: 10px; background: #00ff00; border-radius: 50%; animation: blink 1s infinite; }
+            @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+        </style>
+    </head>
+    <body>
+        <h1>👁️ DARK-EYE MD 👁️</h1>
+        <p class="subtitle">WhatsApp Bot + Website Panel</p>
+        
+        <div class="box">
+            <h2>Connect Bot</h2>
+            <button class="btn" onclick="window.location='/qr'">📱 Get QR Code</button>
+            <button class="btn" onclick="window.location='/pair'">🔢 Get Pair Code</button>
+        </div>
+
+        <div class="box">
+            <h2>Available Commands</h2>
+            <p>.menu - Show all commands</p>
+            <p>.ping - Check bot speed</p>
+            <p>.owner - Owner info</p>
+            <p>.song - Download music</p>
+        </div>
+
+        <p class="status"><span class="dot"></span> Status: ONLINE</p>
+    </body>
+    </html>
+    `)
+})
