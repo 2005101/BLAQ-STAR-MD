@@ -1,0 +1,6 @@
+session/
+auth_info_baileys/
+temp.mp3
+temp.mp4
+node_modules/
+.DS_Store
