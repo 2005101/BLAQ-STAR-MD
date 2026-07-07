@@ -1,12 +1,19 @@
+const express = require('express')
+const path = require('path')
+const fs = require('fs')
 const { default: makeWASocket, DisconnectReason, useMultiFileAuthState, downloadMediaMessage, Browsers } = require('@whiskeysockets/baileys');
 const { Boom } = require('@hapi/boom');
 const yts = require('yt-search');
 const ytDlp = require('yt-dlp-exec');
-const fs = require('fs');
-const path = require('path');
+const QRCode = require('qrcode')
 const axios = require('axios');
 const { exec } = require('child_process');
-const readline = require('readline');
+
+const app = express()
+const PORT = process.env.PORT || 3000
+
+app.use(express.static('public'))
+app.use(express.json())
 
 const BOT_NAME = 'DARK-EYE OFC';
 const OWNER = '263783546271@s.whatsapp.net'; // CHANGE THIS
@@ -23,14 +30,16 @@ let antilink = true;
 let antimention = true;
 let alwaysonline = false;
 
-const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-const question = (text) => new Promise((resolve) => rl.question(text, resolve));
+let sock
+let qr_data = ""
+let pairing_requested = false
+let pairing_number = ""
 
 // ===== BOX FUNCTION =====
 function box(title, data = {}) {
     let text = `*╭───❰ ${BOT_NAME} ❱───╮*\n*│* ${title}\n`;
     for(let key in data){
-        text += `*│* *${key.toUpperCase()}:* ${data[key]}\n`;
+        text += `*│* ◇ *${key.toUpperCase()}:* ${data[key]}\n`;
     }
     text += `*╰────────────────╯*\n\n> *DARK-EYE OFFICIAL DEV 2K*`;
     return text;
@@ -43,56 +52,56 @@ function getMenu(prefix = '.') {
 *╚══════════════════╝*
 
 *╭───❰ OWNER ❱───╮*
-| ${prefix}mode
-| ${prefix}public 
-| ${prefix}private
-| ${prefix}groups 
-| ${prefix}inbox
+|♤ ${prefix}mode
+|♤ ${prefix}public 
+|♤ ${prefix}private
+|♤ ${prefix}groups 
+|♤ ${prefix}inbox
 *╰────────────╯*
 
 *╭───❰ SYSTEM ❱───╮*
-| ${prefix}alive 
-| ${prefix}ping
-| ${prefix}uptime 
-| ${prefix}update
-| ${prefix}repo 
-| ${prefix}menu
+|♤ ${prefix}alive 
+|♤ ${prefix}ping
+|♤ ${prefix}uptime 
+|♤ ${prefix}update
+|♤ ${prefix}repo 
+|♤ ${prefix}menu
 *╰─────────────╯*
 
 *╭────❰ GROUP ❱────╮*
-| ${prefix}glink
-| ${prefix}tagall
-| ${prefix}groupinfo 
-| ${prefix}listadmin
-| ${prefix}kick
-| ${prefix}close 
-| ${prefix}open
-| ${prefix}setgname 
-| ${prefix}del
-| ${prefix}antilink 
-| ${prefix}antimention
+|♤ ${prefix}glink
+|♤ ${prefix}tagall
+|♤ ${prefix}groupinfo 
+|♤ ${prefix}listadmin
+|♤ ${prefix}kick
+|♤ ${prefix}close 
+|♤ ${prefix}open
+|♤ ${prefix}setgname 
+|♤ ${prefix}del
+|♤ ${prefix}antilink 
+|♤ ${prefix}antimention
 *╰────────────╯*
 
 *╭────❰ DOWNLOAD ❱───╮*
-| ${prefix}song 
-| ${prefix}play
-| ${prefix}video
-| ${prefix}movie
+|♤ ${prefix}song 
+|♤ ${prefix}play
+|♤ ${prefix}video
+|♤ ${prefix}movie
 *╰───────────────╯*
 
 *╭───❰ AI ❱───╮*
-| ${prefix}ai 
-| ${prefix}meta
+|♤ ${prefix}ai 
+|♤ ${prefix}meta
 *╰───────────╯*
 
 *╭───❰ SETTINGS ❱───╮*
-| ${prefix}listsudo 
-| ${prefix}addsudo
-| ${prefix}antidelete
-| ${prefix}autoread
-| ${prefix}autotyping
+|♤ ${prefix}listsudo 
+|♤ ${prefix}addsudo
+|♤ ${prefix}antidelete
+|♤ ${prefix}autoread
+|♤ ${prefix}autotyping
 *╰───────────────╯*
-
+♤♤♤♡♡♡♧♧♧□□□◇◇◇○○○☆☆☆
 > *©𝑝𝑜𝑤𝑒𝑟𝑒𝑑 𝑏𝑦 𝐃𝐀𝐑𝐊 𝐄𝐘𝐄 𝐎𝐅𝐂 𝐃𝐄𝐕*
 > Follow Channel: ${CHANNEL}`
 }
@@ -100,43 +109,47 @@ function getMenu(prefix = '.') {
 const start = async () => {
     const { state, saveCreds } = await useMultiFileAuthState('session');
     
-    // ===== QR OR PAIR CODE CHOICE =====
-    const usePairingCode = await question('Use Pairing Code? (y/n): ');
-    let phoneNumber = '';
-    if(usePairingCode.toLowerCase() === 'y'){
-        phoneNumber = await question('Enter Your WhatsApp Number with country code: ');
-        phoneNumber = phoneNumber.replace(/[^0-9]/g, '');
-    }
-    rl.close();
-
-    const sock = makeWASocket({ 
+    sock = makeWASocket({ 
         auth: state, 
-        printQRInTerminal: usePairingCode.toLowerCase() !== 'y',
+        printQRInTerminal: false, // We use website QR instead
         browser: Browsers.macOS('Chrome')
     });
     
-    if(usePairingCode.toLowerCase() === 'y'){
-        await sock.waitForConnectionUpdate((update) => !!update.qr);
-        const code = await sock.requestPairingCode(phoneNumber);
-        console.log(`\n🔑 YOUR PAIR CODE: ${code}\n`);
-    }
-    
     sock.ev.on('creds.update', saveCreds);
 
-    sock.ev.on('connection.update', (update) => {
-        const { connection, lastDisconnect } = update;
+    sock.ev.on('connection.update', async (update) => {
+        const { connection, lastDisconnect, qr } = update;
+        
+        if(qr) {
+            qr_data = await QRCode.toDataURL(qr) // Save QR for website
+        }
+        
         if(connection === 'close') {
+            qr_data = ""
             const shouldReconnect = (lastDisconnect.error)?.output?.statusCode !== DisconnectReason.loggedOut;
             if(shouldReconnect) start();
         }
-        if(connection === 'open') console.log(`\n${BOT_NAME} ✅ CONNECTED\n`);
+        if(connection === 'open') {
+            console.log(`\n${BOT_NAME} ✅ CONNECTED\n`);
+            qr_data = ""
+        }
+        
+        // Auto request pairing code if requested from website
+        if(pairing_requested && pairing_number && connection === 'connecting') {
+            try {
+                const code = await sock.requestPairingCode(pairing_number);
+                console.log(`Pair Code: ${code}`)
+                global.last_pair_code = code
+            } catch(e) {}
+            pairing_requested = false
+        }
     });
 
     const deletedMsgs = new Map();
 
     sock.ev.on('messages.upsert', async ({ messages }) => {
         const msg = messages[0];
-        if(!msg.message) return;
+        if(!msg.message || msg.key.fromMe) return;
         const jid = msg.key.remoteJid;
         const sender = msg.key.participant || msg.key.remoteJid;
         const isGroup = jid.endsWith('@g.us');
@@ -223,3 +236,25 @@ const start = async () => {
 }
 
 start();
+
+// ===== WEBSITE API ROUTES =====
+// API for QR
+app.get('/qr', (req,res) => {
+  res.json({ qr: qr_data })
+})
+
+// API for Pair Code
+app.get('/pair', async (req,res) => {
+  const number = req.query.number
+  pairing_requested = true
+  pairing_number = number.replace(/[^0-9]/g, '')
+  setTimeout(() => {
+    res.json({ code: global.last_pair_code || "Generating..." })
+  }, 3000)
+})
+
+app.get('/', (req,res) => {
+  res.sendFile(path.join(__dirname, 'public/index.html'))
+})
+
+app.listen(PORT, () => console.log(`Website running on port ${PORT}`))
