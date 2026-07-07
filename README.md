@@ -1,6 +1,13 @@
-# DARK-EYE OFC MD
+# DARK-EYE MD
 
-The Official WhatsApp Bot by DARK-EYE
+<p align="center">
+  <img src="https://files.catbox.moe/78un8v.png" width="200" alt="DARK-EYE LOGO"/>
+</p>
+
+<h1 align="center">DARK-EYE OFC MD</h1>
+<p align="center">The Official WhatsApp Bot by DARK-EYE OFC-DEV</p>
+
+---
 
 ## Installation
 ```bash
